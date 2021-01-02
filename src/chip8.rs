@@ -67,7 +67,7 @@ impl Chip8 {
         // Reset timers
     }
     pub fn load_game(&mut self, file_name: &str) -> io::Result<()> {
-        let mut f = File::open(file_name)?;
+        let f = File::open(file_name)?;
         // TODO: Handle error for file loading
 
         let buffer_size = f.metadata().unwrap().len() as usize;
@@ -80,7 +80,7 @@ impl Chip8 {
             *mem_byte = file_byte.unwrap();
         }
 
-        // println!("First 10 bytes of memory: {:#04x?}", &mem_slice[0..10]);
+        println!("First 20 bytes of memory: {:#04x?}", &mem_slice[0..20]);
 
         Ok(())
     }
@@ -89,11 +89,17 @@ impl Chip8 {
         // Fetch Opcode
         let pc = self.program_counter as usize;
         let opcode = u16::from_be_bytes([self.memory[pc], self.memory[pc + 1]]);
-        // println!("opcode: {:#0x?}", opcode);
+        println!("opcode: {:#0x?}", opcode);
 
         // Decode Opcode
         // Get the first half byte (nibble) to determine the opcode
         match opcode & 0xF000 {
+            // ANNN: sets index_register to NNN
+            0xA000 => {
+                let nnn = opcode & 0x0FFF;
+                self.index_register = nnn;
+                self.program_counter += 2;
+            }
             // 6xNN: sets VX to NN
             0x6000 => {
                 let bytes = opcode.to_be_bytes();
@@ -104,14 +110,55 @@ impl Chip8 {
                 // Move pc 2 bytes to next opcode
                 self.program_counter += 2;
 
-                // println!("\nNEXT CPU CYCLE:");
                 // println!("bytes: {:#04x?}", bytes);
                 // println!("x: {}", x);
                 // println!("nn: {:#04x?}", nn);
-                // println!("V Registers: {:?}", self.registers);
             }
-            _ => eprintln!("Unknown opcode: {:#0x?}", opcode),
+            // DXYN: draw to the display
+            0xD000 => {
+                let bytes = opcode.to_be_bytes();
+                let x = bytes[0] & 0x0F;
+                let y = (bytes[1] & 0xF0) >> 4;
+                let n = bytes[1] & 0x0F;
+
+                let height = (n + 1) as usize;
+
+                let i = self.index_register as usize;
+                let sprite = &self.memory[i..i + height];
+
+                // Reset VF register
+                self.registers[0xF] = 0;
+
+                for (line_index, line) in self.gfx.chunks_mut(64).enumerate() {
+                    for (pixel_index, pixel) in line.iter_mut().enumerate() {
+                        if line_index == y as usize && pixel_index == x as usize {
+                            *pixel = sprite[0];
+                        }
+                        // if line_index == y as usize {
+                        //     let pixel = self.memory[self.index_register as usize];
+                        // }
+                    }
+                }
+
+                println!("Screen:");
+                for line in self.gfx.chunks(64) {
+                    println!("{:?}", line);
+                }
+
+                // Move pc to next opcode
+                self.program_counter += 2;
+            }
+            _ => panic!("Unknown CHIP-8 opcode: {:#06x?}", opcode),
         }
+
+        println!("\nNEXT CPU CYCLE:");
+        println!("V Registers: {:?}", self.registers);
+        println!("index register: {:#06x?}", self.index_register);
+        println!(
+            "memory at i: {:#06x?}",
+            self.memory[self.index_register as usize]
+        );
+        // println!("memory at i: {:#06x?}", self.memory[self.index_register as usize]);
 
         // Execute Opcode
 

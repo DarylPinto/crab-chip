@@ -12,20 +12,16 @@ fn main() {
     chip8.initialize();
     chip8.load_game("roms/pong.rom");
 
-    chip8.emulate_cycle();
-    chip8.emulate_cycle();
-    chip8.emulate_cycle();
+    loop {
+        // Emulate one cycle
+        chip8.emulate_cycle();
 
-    // loop {
-    //     // Emulate one cycle
-    //     chip8.emulate_cycle();
+        // If the draw flag is set, update the screen
+        // if chip8.draw_flag {
+        //     drawGraphics();
+        // }
 
-    //     // If the draw flag is set, update the screen
-    //     if chip8.draw_flag {
-    //         // drawGraphics();
-    //     }
-
-    //     // Store key press state (Press and Release)
-    //     chip8.set_keys();
-    // }
+        // Store key press state (Press and Release)
+        // chip8.set_keys();
+    }
 }
