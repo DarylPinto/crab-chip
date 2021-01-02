@@ -1,16 +1,6 @@
 mod chip8;
 use chip8::Chip8;
 
-/**
- * Chip 8 emulator guide:
- * http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
- *
- * Technical reference:
- * http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
- *
- * Graphics renderer:
- * https://github.com/Rust-SDL2/rust-sdl2
- */
 fn main() {
     // Set up render system and register input callbacks
     // setupGraphics();
