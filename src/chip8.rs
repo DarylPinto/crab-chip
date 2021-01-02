@@ -31,7 +31,7 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new() -> Self { 
+    pub fn new() -> Self {
         Chip8 {
             opcode: 0x0000,
             memory: [0x00; 4096],
@@ -44,24 +44,24 @@ impl Chip8 {
             stack: Stack::new(),
             stack_pointer: 0x00,
             // keypad: (0x0u8..0xEu8).collect::<[u8; 16]>()
-            keypad: [0x00;16],
+            keypad: [0x00; 16],
             draw_flag: false,
         }
     }
     pub fn initialize(&mut self) {
         self.program_counter = 0x200;
 
-        // Clear display	
+        // Clear display
         // Clear stack
         // Clear registers V0-VF
         // Clear memory
 
         // THIS "FONTSET" is a TEMPORARY VALUE
-        let chip8_fontset = [0x00;80];
+        let chip8_fontset = [0x00; 80];
 
         // Load fontset
         for i in 0..80 {
-           self.memory[i] = chip8_fontset[i];
+            self.memory[i] = chip8_fontset[i];
         }
 
         // Reset timers
@@ -80,18 +80,52 @@ impl Chip8 {
             *mem_byte = file_byte.unwrap();
         }
 
-        // println!("{:?}", self.memory);
+        // println!("First 10 bytes of memory: {:#04x?}", &mem_slice[0..10]);
 
         Ok(())
     }
     pub fn set_keys(&self) {}
-    pub fn emulate_cycle(&self) {
+    pub fn emulate_cycle(&mut self) {
         // Fetch Opcode
+        let pc = self.program_counter as usize;
+        let opcode = u16::from_be_bytes([self.memory[pc], self.memory[pc + 1]]);
+        // println!("opcode: {:#0x?}", opcode);
 
         // Decode Opcode
+        // Get the first half byte (nibble) to determine the opcode
+        match opcode & 0xF000 {
+            // 6xNN: sets VX to NN
+            0x6000 => {
+                let bytes = opcode.to_be_bytes();
+                let x: usize = (bytes[0] & 0x0F).into();
+                let nn = bytes[1];
+                self.registers[x] = nn;
+
+                // Move pc 2 bytes to next opcode
+                self.program_counter += 2;
+
+                // println!("\nNEXT CPU CYCLE:");
+                // println!("bytes: {:#04x?}", bytes);
+                // println!("x: {}", x);
+                // println!("nn: {:#04x?}", nn);
+                // println!("V Registers: {:?}", self.registers);
+            }
+            _ => eprintln!("Unknown opcode: {:#0x?}", opcode),
+        }
+
         // Execute Opcode
-        
+
         // Update timers
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1;
+        }
+
+        if self.sound_timer > 0 {
+            if self.sound_timer == 1 {
+                println!("BEEP!");
+            }
+            self.sound_timer -= 1;
+        }
     }
 }
 
