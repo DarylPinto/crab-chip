@@ -7,21 +7,21 @@ fn main() {
     // setupInput();
 
     // Initialize the Chip8 system and load the game into the memory
-    let chip8 = Chip8::new();
-    chip8.loadGame("pong");
+    let mut chip8 = Chip8::new();
 
-    loop {
-        // Emulate one cycle
-        chip8.emulateCycle();
+    chip8.initialize();
+    chip8.load_game("roms/pong.rom");
 
-        // If the draw flag is set, update the screen
-        if chip8.draw_flag {
-            // drawGraphics();
-        }
+    // loop {
+    //     // Emulate one cycle
+    //     chip8.emulate_cycle();
 
-        // Store key press state (Press and Release)
-        chip8.setKeys();
-    }
+    //     // If the draw flag is set, update the screen
+    //     if chip8.draw_flag {
+    //         // drawGraphics();
+    //     }
 
-    println!("Hello, world #{}!", 0xFF);
+    //     // Store key press state (Press and Release)
+    //     chip8.set_keys();
+    // }
 }

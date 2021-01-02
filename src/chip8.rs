@@ -1,3 +1,8 @@
+use std::fs::File;
+use std::io;
+use std::io::Read;
+use std::slice;
+
 #[derive(Debug)]
 pub struct Chip8 {
     /* === CPU ===*/
@@ -26,8 +31,7 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new() -> Self {
-        // TODO: Return initialized Cpu here
+    pub fn new() -> Self { 
         Chip8 {
             opcode: 0x0000,
             memory: [0x00; 4096],
@@ -40,15 +44,48 @@ impl Chip8 {
             stack: Stack::new(),
             stack_pointer: 0x00,
             // keypad: (0x0u8..0xEu8).collect::<[u8; 16]>()
-            keypad: [
-                0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
-            ],
+            keypad: [0x00;16],
             draw_flag: false,
         }
     }
-    pub fn loadGame(&self, file_name: &str) {}
-    pub fn setKeys(&self) {}
-    pub fn emulateCycle(&self) {
+    pub fn initialize(&mut self) {
+        self.program_counter = 0x200;
+
+        // Clear display	
+        // Clear stack
+        // Clear registers V0-VF
+        // Clear memory
+
+        // THIS "FONTSET" is a TEMPORARY VALUE
+        let chip8_fontset = [0x00;80];
+
+        // Load fontset
+        for i in 0..80 {
+           self.memory[i] = chip8_fontset[i];
+        }
+
+        // Reset timers
+    }
+    pub fn load_game(&mut self, file_name: &str) -> io::Result<()> {
+        let mut f = File::open(file_name)?;
+        // TODO: Handle error for file loading
+
+        let buffer_size = f.metadata().unwrap().len() as usize;
+
+        let offset: usize = self.program_counter.into();
+        let end = offset + buffer_size;
+        let mem_slice = &mut self.memory[offset..end];
+
+        for (mem_byte, file_byte) in mem_slice.iter_mut().zip(f.bytes()) {
+            *mem_byte = file_byte.unwrap();
+        }
+
+        // println!("{:?}", self.memory);
+
+        Ok(())
+    }
+    pub fn set_keys(&self) {}
+    pub fn emulate_cycle(&self) {
         // Fetch Opcode
 
         // Decode Opcode
