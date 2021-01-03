@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{self, Read};
+mod format_display;
 mod operations;
 
 #[derive(Debug)]
@@ -20,8 +21,8 @@ pub struct Chip8 {
     delay_timer: u8,
     sound_timer: u8,
 
-    stack: Stack,
-    stack_pointer: u16,
+    stack: [u16; 16],
+    stack_pointer: u8,
 
     keypad: [u8; 16],
 
@@ -40,7 +41,7 @@ impl Chip8 {
             gfx: [0x00; 64 * 32],
             delay_timer: 0x00,
             sound_timer: 0x00,
-            stack: Stack::new(),
+            stack: [0x00; 16],
             stack_pointer: 0x00,
             // keypad: (0x0u8..0xEu8).collect::<[u8; 16]>()
             keypad: [0x00; 16],
@@ -79,54 +80,47 @@ impl Chip8 {
             *mem_byte = file_byte.unwrap();
         }
 
-        println!("First 20 bytes of memory: {:#04x?}", &mem_slice[0..20]);
-
         Ok(())
     }
     pub fn set_keys(&self) {}
     pub fn emulate_cycle(&mut self) {
         // Fetch Opcode
         let pc = self.program_counter as usize;
-        let opcode = u16::from_be_bytes([self.memory[pc], self.memory[pc + 1]]);
-        println!("opcode: {:#0x?}", opcode);
+        self.opcode = u16::from_be_bytes([self.memory[pc], self.memory[pc + 1]]);
 
         // Decode Opcode
         // Get the first half byte (nibble) to determine the opcode
-        match opcode & 0xF000 {
+        match self.opcode & 0xF000 {
+            0x2000 => {
+                // Store pc in the stack and increment sp
+                let sp = self.stack_pointer as usize;
+                self.stack[sp] = self.program_counter;
+                self.stack_pointer += 1;
+
+                // Call NNN
+                let nnn = self.opcode & 0x0FFF;
+                self.program_counter = nnn;
+            }
             // ANNN: sets index_register to NNN
             0xA000 => {
-                let nnn = opcode & 0x0FFF;
+                let nnn = self.opcode & 0x0FFF;
                 self.index_register = nnn;
                 self.program_counter += 2;
             }
             // 6xNN: sets VX to NN
             0x6000 => {
-                let bytes = opcode.to_be_bytes();
+                let bytes = self.opcode.to_be_bytes();
                 let x: usize = (bytes[0] & 0x0F).into();
                 let nn = bytes[1];
                 self.registers[x] = nn;
 
                 // Move pc 2 bytes to next opcode
                 self.program_counter += 2;
-
-                // println!("bytes: {:#04x?}", bytes);
-                // println!("x: {}", x);
-                // println!("nn: {:#04x?}", nn);
             }
             // DXYN: draw to the display
-            0xD000 => operations::dxyn(opcode, self),
-            _ => panic!("Unknown CHIP-8 opcode: {:#06x?}", opcode),
+            0xD000 => operations::dxyn(self.opcode, self),
+            _ => panic!("Unknown CHIP-8 opcode: {:#06x?}", self.opcode),
         }
-
-        // println!("\nNEXT CPU CYCLE:");
-        println!("V Registers: {:?}", self.registers);
-        println!("index register: {:#06x?}", self.index_register);
-        println!(
-            "memory at i: {:#06x?}",
-            self.memory[self.index_register as usize]
-        );
-        // println!("memory at i: {:#06x?}", self.memory[self.index_register as usize]);
-
         // Execute Opcode
 
         // Update timers
@@ -139,25 +133,6 @@ impl Chip8 {
                 println!("BEEP!");
             }
             self.sound_timer -= 1;
-        }
-    }
-}
-
-#[derive(Debug)]
-struct Stack {
-    levels: Vec<u16>,
-}
-
-impl Stack {
-    fn new() -> Self {
-        Stack { levels: Vec::new() }
-    }
-    // Consider initializing with Vec::with_capacity(16) instead
-    fn push(&mut self, val: u16) {
-        if self.levels.len() < 16 {
-            self.levels.push(val);
-        } else {
-            eprintln!("CPU Stack is full!");
         }
     }
 }

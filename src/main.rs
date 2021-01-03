@@ -18,6 +18,7 @@ fn main() {
         i += 1;
         println!("\nCYCLE {}:", i);
         chip8.emulate_cycle();
+        println!("{}", chip8);
 
         // If the draw flag is set, update the screen
         // if chip8.draw_flag {
