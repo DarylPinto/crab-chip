@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::fs::File;
 use std::io::{self, Read};
 mod fmt_debug;
@@ -138,17 +139,31 @@ impl Chip8 {
                 self.program_counter = nnn;
                 pc_should_increment = false;
             }
+            // 3XNN: Skip next instruction if vX == NN
+            0x3000 => {
+                // pc is auto-incremented after each cycle (except in special cases)
+                // so we can skip the next instruction by manually incrementing it here
+                // such that it increments twice
+                if vx == nn {
+                    self.program_counter += 2;
+                }
+            }
+            // 6XNN: set VX to NN
+            0x6000 => {
+                self.registers[x] = nn;
+            }
+            // 7XNN: Add NN to vX
+            0x7000 => {
+                self.registers[x] += nn;
+            }
             // ANNN: set index_register to NNN
             0xA000 => {
                 self.index_register = nnn;
             }
-            // 6xNN: set VX to NN
-            0x6000 => {
-                self.registers[x] = nn;
-            }
-            // 7xNN: Add NN to vX
-            0x7000 => {
-                self.registers[x] += nn;
+            // CXNN: set vX to a random u8 & NN (bitwise &)
+            0xC000 => {
+                let random: u8 = rand::thread_rng().gen();
+                self.registers[x] = random & nn;
             }
             // DXYN: draw to the display
             0xD000 => operations::dxyn(self.opcode, self),
