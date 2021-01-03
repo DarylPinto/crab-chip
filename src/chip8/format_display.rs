@@ -32,7 +32,6 @@ impl std::fmt::Display for Chip8 {
             writeln!(f, "\t{:?}", line);
         }
 
-
         writeln!(f, "}}")
     }
 }

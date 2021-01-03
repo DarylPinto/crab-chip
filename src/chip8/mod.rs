@@ -91,6 +91,12 @@ impl Chip8 {
         // Decode Opcode
         // Get the first half byte (nibble) to determine the opcode
         match self.opcode & 0xF000 {
+            // 1NNN: Jump to NNN
+            0x1000 => {
+                let nnn = self.opcode & 0x0FFF;
+                self.program_counter = nnn;
+            }
+            // 2NNN: Call NNN
             0x2000 => {
                 // Store pc in the stack and increment sp
                 let sp = self.stack_pointer as usize;
@@ -101,13 +107,13 @@ impl Chip8 {
                 let nnn = self.opcode & 0x0FFF;
                 self.program_counter = nnn;
             }
-            // ANNN: sets index_register to NNN
+            // ANNN: set index_register to NNN
             0xA000 => {
                 let nnn = self.opcode & 0x0FFF;
                 self.index_register = nnn;
                 self.program_counter += 2;
             }
-            // 6xNN: sets VX to NN
+            // 6xNN: set VX to NN
             0x6000 => {
                 let bytes = self.opcode.to_be_bytes();
                 let x: usize = (bytes[0] & 0x0F).into();
@@ -119,6 +125,28 @@ impl Chip8 {
             }
             // DXYN: draw to the display
             0xD000 => operations::dxyn(self.opcode, self),
+            // F series opcodes
+            0xF000 => {
+                match self.opcode & 0x00FF {
+                    // Fx33 (hard to explain, check wikipedia)
+                    0x33 => {
+                        let I = self.index_register as usize;
+                        let x = ((self.opcode & 0x0F00) >> 8) as usize;
+                        let vx = self.registers[x];
+
+                        let hundreds = (vx / 100) % 10;
+                        let tens = (vx / 10) % 10;
+                        let ones = vx % 10;
+
+                        self.memory[I] = hundreds;
+                        self.memory[I + 1] = tens;
+                        self.memory[I + 2] = ones;
+
+                        self.program_counter += 2;
+                    }
+                    _ => panic!("Unknown CHIP-8 F-series opcode: {:#06x?}", self.opcode),
+                }
+            }
             _ => panic!("Unknown CHIP-8 opcode: {:#06x?}", self.opcode),
         }
         // Execute Opcode
