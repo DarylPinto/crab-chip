@@ -1,7 +1,6 @@
 use std::fs::File;
-use std::io;
-use std::io::Read;
-use std::slice;
+use std::io::{self, Read};
+mod operations;
 
 #[derive(Debug)]
 pub struct Chip8 {
@@ -115,43 +114,11 @@ impl Chip8 {
                 // println!("nn: {:#04x?}", nn);
             }
             // DXYN: draw to the display
-            0xD000 => {
-                let bytes = opcode.to_be_bytes();
-                let x = bytes[0] & 0x0F;
-                let y = (bytes[1] & 0xF0) >> 4;
-                let n = bytes[1] & 0x0F;
-
-                let height = (n + 1) as usize;
-
-                let i = self.index_register as usize;
-                let sprite = &self.memory[i..i + height];
-
-                // Reset VF register
-                self.registers[0xF] = 0;
-
-                for (line_index, line) in self.gfx.chunks_mut(64).enumerate() {
-                    for (pixel_index, pixel) in line.iter_mut().enumerate() {
-                        if line_index == y as usize && pixel_index == x as usize {
-                            *pixel = sprite[0];
-                        }
-                        // if line_index == y as usize {
-                        //     let pixel = self.memory[self.index_register as usize];
-                        // }
-                    }
-                }
-
-                println!("Screen:");
-                for line in self.gfx.chunks(64) {
-                    println!("{:?}", line);
-                }
-
-                // Move pc to next opcode
-                self.program_counter += 2;
-            }
+            0xD000 => operations::dxyn(opcode, self),
             _ => panic!("Unknown CHIP-8 opcode: {:#06x?}", opcode),
         }
 
-        println!("\nNEXT CPU CYCLE:");
+        // println!("\nNEXT CPU CYCLE:");
         println!("V Registers: {:?}", self.registers);
         println!("index register: {:#06x?}", self.index_register);
         println!(

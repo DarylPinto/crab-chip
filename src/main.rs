@@ -12,8 +12,11 @@ fn main() {
     chip8.initialize();
     chip8.load_game("roms/pong.rom");
 
+    let mut i = 0;
     loop {
         // Emulate one cycle
+        i += 1;
+        println!("\nCYCLE {}:", i);
         chip8.emulate_cycle();
 
         // If the draw flag is set, update the screen
