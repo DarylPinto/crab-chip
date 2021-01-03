@@ -44,5 +44,4 @@ pub fn dxyn(opcode: u16, chip8: &mut Chip8) {
     }
 
     chip8.draw_flag = true;
-    chip8.program_counter += 2;
 }

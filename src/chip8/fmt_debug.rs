@@ -20,6 +20,9 @@ impl std::fmt::Debug for Chip8 {
         writeln!(f, "\tCall Stack: {:04x?}", self.stack);
         writeln!(f, "\tStack Pointer: {}", self.stack_pointer);
 
+        writeln!(f, "\tDelay Timer: {:#04x?}", self.delay_timer);
+        writeln!(f, "\tSound Timer: {:#04x?}", self.sound_timer);
+
         // writeln!(f, "\tMemory: {:x?}", self.memory);
 
         writeln!(f, "\tScreen:");

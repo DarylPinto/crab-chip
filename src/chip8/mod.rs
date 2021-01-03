@@ -85,56 +85,93 @@ impl Chip8 {
     }
     pub fn set_keys(&self) {}
     pub fn emulate_cycle(&mut self) {
-        // Fetch Opcode
+        let mut pc_should_increment = true;
+
+        // Usize casted pointers for indexing system memory
         let pc = self.program_counter as usize;
+        let sp = self.stack_pointer as usize;
+        let I = self.index_register as usize;
+
+        // Fetch Opcode
         self.opcode = u16::from_be_bytes([self.memory[pc], self.memory[pc + 1]]);
 
-        // Decode Opcode
+        // These variables are derived from the opcode in many cases;
+        // so much so that it makes sense to extract them here instead of
+        // within each match arm
+        let nnn = self.opcode & 0x0FFF;
+        let nn = (self.opcode & 0x00FF) as u8;
+        let x = ((self.opcode & 0x0F00) >> 8) as usize;
+        let y = ((self.opcode & 0x00F0) >> 4) as usize;
+        let vx = self.registers[x];
+        let vy = self.registers[y];
+
         // Get the first half byte (nibble) to determine the opcode
         match self.opcode & 0xF000 {
+            // 0 series opcodes
+            0x0000 => {
+                match self.opcode & 0x00FF {
+                    // 00E0: Clear screen
+                    0xE0 => self.gfx.iter_mut().for_each(|byte| *byte = 0x00),
+                    // 00EE: Return from subroutine
+                    0xEE => {
+                        self.stack_pointer -= 1;
+                        let sp = self.stack_pointer as usize;
+                        self.program_counter = self.stack[sp];
+                    }
+                    _ => {
+                        panic!("Unknown CHIP-8 0-series opcode: {:#06x?}", self.opcode);
+                    }
+                }
+            }
             // 1NNN: Jump to NNN
             0x1000 => {
-                let nnn = self.opcode & 0x0FFF;
                 self.program_counter = nnn;
+                pc_should_increment = false;
             }
             // 2NNN: Call NNN
             0x2000 => {
                 // Store pc in the stack and increment sp
-                let sp = self.stack_pointer as usize;
                 self.stack[sp] = self.program_counter;
                 self.stack_pointer += 1;
 
                 // Call NNN
-                let nnn = self.opcode & 0x0FFF;
                 self.program_counter = nnn;
+                pc_should_increment = false;
             }
             // ANNN: set index_register to NNN
             0xA000 => {
-                let nnn = self.opcode & 0x0FFF;
                 self.index_register = nnn;
-                self.program_counter += 2;
             }
             // 6xNN: set VX to NN
             0x6000 => {
-                let bytes = self.opcode.to_be_bytes();
-                let x: usize = (bytes[0] & 0x0F).into();
-                let nn = bytes[1];
                 self.registers[x] = nn;
-
-                // Move pc 2 bytes to next opcode
-                self.program_counter += 2;
+            }
+            // 7xNN: Add NN to vX
+            0x7000 => {
+                self.registers[x] += nn;
             }
             // DXYN: draw to the display
             0xD000 => operations::dxyn(self.opcode, self),
             // F series opcodes
             0xF000 => {
                 match self.opcode & 0x00FF {
+                    // Fx15: Set vX to value of delay timer
+                    0x07 => {
+                        self.registers[x] = self.delay_timer;
+                    }
+                    // Fx15: Set delay timer to vX
+                    0x15 => {
+                        self.delay_timer = vx;
+                    }
+                    // Fx29: Set I to the location of the sprite for the character in vX
+                    // Fontset should already be loaded in memory at 0x50
+                    0x29 => {
+                        let vx = vx as u16;
+                        let font_sprite_address = FONTSET_START_ADDRESS + (vx * 5);
+                        self.index_register = font_sprite_address;
+                    }
                     // Fx33 (hard to explain, check wikipedia)
                     0x33 => {
-                        let I = self.index_register as usize;
-                        let x = ((self.opcode & 0x0F00) >> 8) as usize;
-                        let vx = self.registers[x];
-
                         let hundreds = (vx / 100) % 10;
                         let tens = (vx / 10) % 10;
                         let ones = vx % 10;
@@ -142,26 +179,23 @@ impl Chip8 {
                         self.memory[I] = hundreds;
                         self.memory[I + 1] = tens;
                         self.memory[I + 2] = ones;
-
-                        self.program_counter += 2;
                     }
                     // Fx65: Fill v0 to vX (including vX) with mem values starting from I
                     0x65 => {
-                        let I = self.index_register as usize;
-                        let x = ((self.opcode & 0x0F00) >> 8) as usize;
-
                         for offset in 0..x + 1 {
                             self.registers[offset] = self.memory[I + offset];
                         }
-
-                        self.program_counter += 2;
                     }
                     _ => panic!("Unknown CHIP-8 F-series opcode: {:#06x?}", self.opcode),
                 }
             }
             _ => panic!("Unknown CHIP-8 opcode: {:#06x?}", self.opcode),
         }
-        // Execute Opcode
+
+        // Move pc 2 bytes to next opcode (unless current opcode has prevented it)
+        if pc_should_increment {
+            self.program_counter += 2;
+        }
 
         // Update timers
         if self.delay_timer > 0 {
