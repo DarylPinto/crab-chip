@@ -28,7 +28,7 @@ pub struct Chip8 {
     stack: [u16; 16],
     stack_pointer: u8,
 
-    keypad: [u8; 16],
+    keypad: [bool; 16],
 
     /* === FLAGS === */
     pub draw_flag: bool,
@@ -47,8 +47,7 @@ impl Chip8 {
             sound_timer: 0x00,
             stack: [0x00; 16],
             stack_pointer: 0x00,
-            // keypad: (0x0u8..0xEu8).collect::<[u8; 16]>()
-            keypad: [0x00; 16],
+            keypad: [false; 16],
             draw_flag: false,
         }
     }
@@ -156,6 +155,32 @@ impl Chip8 {
             0x7000 => {
                 self.registers[x] += nn;
             }
+            // 8 series opcodes
+            0x8000 => {
+                match self.opcode & 0x000F {
+                    // 8XY2: set vX to (vX & vY)
+                    0x02 => {
+                        self.registers[x] = vx & vy;
+                    }
+                    // 8XY4: Adds VY to VX. V[0xF] is set to 1 when there's a carry, and to 0 when there isn't.
+                    0x04 => {
+                        let vx = vx as u16;
+                        let vy = vy as u16;
+
+                        let u8_max = u8::MAX as u16;
+
+                        let result = vx + vy;
+                        let carried = result > u8_max;
+
+                        self.registers[x] += (result % u8_max) as u8;
+                        self.registers[0x0F] = match carried {
+                            true => 0x01,
+                            false => 0x00,
+                        };
+                    }
+                    _ => panic!("Unknown CHIP-8 8-series opcode: {:#06x?}", self.opcode),
+                }
+            }
             // ANNN: set index_register to NNN
             0xA000 => {
                 self.index_register = nnn;
@@ -167,6 +192,25 @@ impl Chip8 {
             }
             // DXYN: draw to the display
             0xD000 => operations::dxyn(self.opcode, self),
+            // E series opcodes
+            0xE000 => {
+                let vx = vx as usize;
+                match self.opcode & 0x00FF {
+                    // EX9E: Skip next instruction if key in vX is pressed
+                    0x9E => {
+                        if self.keypad[vx] {
+                            self.program_counter += 2;
+                        }
+                    }
+                    // EXA1: Skip next instruction if key in vX is NOT pressed
+                    0xA1 => {
+                        if !self.keypad[vx] {
+                            self.program_counter += 2;
+                        }
+                    }
+                    _ => panic!("Unknown CHIP-8 E-series opcode: {:#06x?}", self.opcode),
+                }
+            }
             // F series opcodes
             0xF000 => {
                 match self.opcode & 0x00FF {
