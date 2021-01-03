@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{self, Read};
 mod fmt_debug;
 mod fontset;
-mod operations;
+mod draw;
 
 const FONTSET_START_ADDRESS: u16 = 0x50;
 const PC_START_ADDRESS: u16 = 0x200;
@@ -100,6 +100,7 @@ impl Chip8 {
         // within each match arm
         let nnn = self.opcode & 0x0FFF;
         let nn = (self.opcode & 0x00FF) as u8;
+        let n = (self.opcode & 0x000F) as u8;
         let x = ((self.opcode & 0x0F00) >> 8) as usize;
         let y = ((self.opcode & 0x00F0) >> 4) as usize;
         let vx = self.registers[x];
@@ -118,9 +119,7 @@ impl Chip8 {
                         let sp = self.stack_pointer as usize;
                         self.program_counter = self.stack[sp];
                     }
-                    _ => {
-                        panic!("Unknown CHIP-8 0-series opcode: {:#06x?}", self.opcode);
-                    }
+                    _ => panic!("Unknown CHIP-8 0-series opcode: {:#06x?}", self.opcode)
                 }
             }
             // 1NNN: Jump to NNN
@@ -144,6 +143,12 @@ impl Chip8 {
                 // so we can skip the next instruction by manually incrementing it here
                 // such that it increments twice
                 if vx == nn {
+                    self.program_counter += 2;
+                }
+            }
+            // 4XNN: Skip next instruction if vX != NN
+            0x4000 => { 
+                if vx != nn {
                     self.program_counter += 2;
                 }
             }
@@ -191,7 +196,7 @@ impl Chip8 {
                 self.registers[x] = random & nn;
             }
             // DXYN: draw to the display
-            0xD000 => operations::dxyn(self.opcode, self),
+            0xD000 => draw::dxyn(self, vx, vy, n, I),
             // E series opcodes
             0xE000 => {
                 let vx = vx as usize;

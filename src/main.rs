@@ -1,5 +1,9 @@
 mod chip8;
 use chip8::Chip8;
+use std::time::Duration;
+use std::thread;
+
+const CLOCK_SPEED_HZ: u64 = 60;
 
 fn main() {
     // Set up render system and register input callbacks
@@ -27,5 +31,6 @@ fn main() {
 
         // Store key press state (Press and Release)
         // chip8.set_keys();
+        thread::sleep(Duration::from_millis(1000 / CLOCK_SPEED_HZ))
     }
 }
