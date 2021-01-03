@@ -25,7 +25,7 @@ impl std::fmt::Display for Chip8 {
         writeln!(f, "\tScreen:");
         for chunk in self.gfx.chunks(64) {
             let line: String = chunk
-                .into_iter()
+                .iter()
                 .map(|b| if *b == 0 { ' ' } else { '▇' })
                 .collect();
 

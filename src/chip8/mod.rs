@@ -144,6 +144,17 @@ impl Chip8 {
 
                         self.program_counter += 2;
                     }
+                    // Fx65: Fill v0 to vX (including vX) with mem values starting from I
+                    0x65 => {
+                        let I = self.index_register as usize;
+                        let x = ((self.opcode & 0x0F00) >> 8) as usize;
+
+                        for offset in 0..x + 1 {
+                            self.registers[offset] = self.memory[I + offset];
+                        }
+
+                        self.program_counter += 2;
+                    }
                     _ => panic!("Unknown CHIP-8 F-series opcode: {:#06x?}", self.opcode),
                 }
             }
