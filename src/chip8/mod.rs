@@ -1,9 +1,12 @@
 use std::fs::File;
 use std::io::{self, Read};
-mod format_display;
+mod fmt_debug;
+mod fontset;
 mod operations;
 
-#[derive(Debug)]
+const FONTSET_START_ADDRESS: u16 = 0x50;
+const PC_START_ADDRESS: u16 = 0x200;
+
 pub struct Chip8 {
     /* === CPU ===*/
     opcode: u16,
@@ -49,19 +52,20 @@ impl Chip8 {
         }
     }
     pub fn initialize(&mut self) {
-        self.program_counter = 0x200;
+        self.program_counter = PC_START_ADDRESS;
 
         // Clear display
         // Clear stack
         // Clear registers V0-VF
         // Clear memory
 
-        // THIS "FONTSET" is a TEMPORARY VALUE
-        let chip8_fontset = [0x00; 80];
+        // Load fontset into memory
+        let font = fontset::get();
+        let addr = FONTSET_START_ADDRESS as usize;
+        let mem_slice = &mut self.memory[addr..];
 
-        // Load fontset
-        for i in 0..80 {
-            self.memory[i] = chip8_fontset[i];
+        for (mem_byte, font_byte) in mem_slice.iter_mut().zip(font.iter()) {
+            *mem_byte = *font_byte;
         }
 
         // Reset timers
@@ -70,11 +74,8 @@ impl Chip8 {
         let f = File::open(file_name)?;
         // TODO: Handle error for file loading
 
-        let buffer_size = f.metadata().unwrap().len() as usize;
-
-        let offset: usize = self.program_counter.into();
-        let end = offset + buffer_size;
-        let mem_slice = &mut self.memory[offset..end];
+        let pc = self.program_counter as usize;
+        let mem_slice = &mut self.memory[pc..];
 
         for (mem_byte, file_byte) in mem_slice.iter_mut().zip(f.bytes()) {
             *mem_byte = file_byte.unwrap();
