@@ -14,7 +14,7 @@ fn main() {
     let mut chip8 = Chip8::new();
 
     chip8.initialize();
-    chip8.load_game("roms/pong.rom");
+    chip8.load_game("roms/Kaleidoscope [Joseph Weisbecker, 1978].ch8");
 
     let mut i = 0;
     loop {
@@ -30,7 +30,14 @@ fn main() {
         // }
 
         // Store key press state (Press and Release)
-        chip8.set_keys(0x05, true); // Hold down 0x05 key (temp)
+        if i % 10 == 0 {
+            chip8.set_keys(0x01, true); // Hold down 0x05 key (temp)
+        } else if i % 7 == 0 {
+            chip8.set_keys(0x07, true);
+        } else if i % 2 == 0 {
+            chip8.set_keys(0x07, false);
+            chip8.set_keys(0x01, false);
+        }
 
         // Lock cycle loop to 60hz
         thread::sleep(Duration::from_millis(1000 / CLOCK_SPEED_HZ))

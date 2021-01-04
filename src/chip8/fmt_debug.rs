@@ -25,7 +25,16 @@ impl std::fmt::Debug for Chip8 {
 
         // writeln!(f, "\tMemory: {:x?}", self.memory);
 
-        writeln!(f, "\tKeypad: {:02x?}", self.keypad);
+        writeln!(
+            f,
+            "\tCurrently Pressed Keys: {:02x?}",
+            self.keypad
+                .iter()
+                .enumerate()
+                .map(|(key, is_pressed)| if *is_pressed { key } else { 0xFF })
+                .filter(|key| *key as u8 != 0xFF)
+                .collect::<Vec<usize>>()
+        );
 
         writeln!(f, "\tScreen:");
         for chunk in self.gfx.chunks(64) {

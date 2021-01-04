@@ -175,9 +175,17 @@ impl Chip8 {
                     0x00 => {
                         self.registers[x] = vy;
                     }
+                    // 8XY1: set vX to vx OR vY
+                    0x01 => {
+                        self.registers[x] = vx | vy;
+                    }
                     // 8XY2: set vX to (vX & vY)
                     0x02 => {
                         self.registers[x] = vx & vy;
+                    }
+                    // 8XY3: set vX to vx XOR vY
+                    0x03 => {
+                        self.registers[x] = vx ^ vy;
                     }
                     // 8XY4: Adds VY to VX. V[0xF] is set to 1 when there's a carry, and to 0 when there isn't.
                     0x04 => {
@@ -201,9 +209,6 @@ impl Chip8 {
                         let vx = vx as u16;
                         let vy = vy as u16;
 
-                        let u8_max = u8::MAX as u16;
-
-                        let result = vx - vy;
                         let wrapped_result = (vx as u8).wrapping_sub(vy as u8);
 
                         self.registers[x] = wrapped_result;
@@ -211,6 +216,35 @@ impl Chip8 {
                             true => 0x01,
                             false => 0x00,
                         };
+                    }
+                    // 8XY6: Store the least significant bit of VX in VF, then shift VX to the right by 1
+                    0x06 => {
+                        let least_significant_bit = vx & 0x01;
+                        self.registers[0x0F] = least_significant_bit;
+
+                        self.registers[x] = vx >> 1;
+                    }
+                    // BXY7: Set VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+                    0x07 => {
+                        let vx = vx as u16;
+                        let vy = vy as u16;
+
+                        let wrapped_result = (vy as u8).wrapping_sub(vx as u8);
+
+                        self.registers[x] = wrapped_result;
+                        self.registers[0x0F] = match vy > vx {
+                            true => 0x01,
+                            false => 0x00,
+                        };
+                    }
+                    // 8XYE: Store the most significant bit of VX in VF, then shift VX to the left by 1
+                    0x0E => {
+                        // 0x80 is b10000000, so using AND and shifting right by 7
+                        // gets us the most significant bit
+                        let most_signficant_bit = (vx & 0x80) >> 7;
+                        self.registers[0x0F] = most_signficant_bit;
+
+                        self.registers[x] = vx << 1;
                     }
                     _ => panic!("Unknown CHIP-8 8-series opcode: {:#06x?}", self.opcode),
                 }
@@ -264,6 +298,21 @@ impl Chip8 {
                     0x07 => {
                         self.registers[x] = self.delay_timer;
                     }
+                    // Fx0A: wait for keypress, store in vX
+                    0x0A => {
+                        let mut any_key_pressed = false;
+
+                        for key in 0..0x0F {
+                            if self.keypad[key] {
+                                self.registers[x] = key as u8;
+                                any_key_pressed = true;
+                            }
+                        }
+
+                        if !any_key_pressed {
+                            pc_should_increment = false;
+                        }
+                    }
                     // Fx15: Set delay timer to vX
                     0x15 => {
                         self.delay_timer = vx;
@@ -292,6 +341,12 @@ impl Chip8 {
                         self.memory[I] = hundreds;
                         self.memory[I + 1] = tens;
                         self.memory[I + 2] = ones;
+                    }
+                    // Fx55: Store v0 to vX (including vX) in memory starting at I
+                    0x55 => {
+                        for offset in 0..x + 1 {
+                            self.memory[I + offset] = self.registers[offset];
+                        }
                     }
                     // Fx65: Fill v0 to vX (including vX) with mem values starting from I
                     0x65 => {
