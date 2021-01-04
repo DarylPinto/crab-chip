@@ -70,9 +70,11 @@ impl Chip8 {
 
         // Reset timers
     }
-    pub fn load_game(&mut self, file_name: &str) -> io::Result<()> {
-        let f = File::open(file_name)?;
-        // TODO: Handle error for file loading
+    pub fn load_game(&mut self, file_name: &str) {
+        let f = match File::open(file_name) {
+            Err(msg) => panic!("couldn't open {}: {}", file_name, msg),
+            Ok(file) => file,
+        };
 
         let pc = self.program_counter as usize;
         let mem_slice = &mut self.memory[pc..];
@@ -80,8 +82,6 @@ impl Chip8 {
         for (mem_byte, file_byte) in mem_slice.iter_mut().zip(f.bytes()) {
             *mem_byte = file_byte.unwrap();
         }
-
-        Ok(())
     }
     pub fn set_keys(&mut self, key_index: u8, is_pressed: bool) {
         self.keypad[key_index as usize] = is_pressed;

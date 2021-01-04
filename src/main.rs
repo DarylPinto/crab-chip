@@ -14,7 +14,7 @@ fn main() {
     let mut chip8 = Chip8::new();
 
     chip8.initialize();
-    chip8.load_game("roms/Kaleidoscope [Joseph Weisbecker, 1978].ch8");
+    chip8.load_game("roms/pong.rom");
 
     let mut i = 0;
     loop {
