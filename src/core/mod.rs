@@ -20,7 +20,7 @@ pub struct Chip8 {
     program_counter: u16,
 
     // Screen graphics (64 x 32 px)
-    gfx: [u8; 64 * 32],
+    pub gfx: [u8; 64 * 32],
 
     delay_timer: u8,
     sound_timer: u8,
@@ -83,8 +83,10 @@ impl Chip8 {
             *mem_byte = file_byte.unwrap();
         }
     }
-    pub fn set_keys(&mut self, key_index: u8, is_pressed: bool) {
-        self.keypad[key_index as usize] = is_pressed;
+    pub fn set_keys(&mut self, keypad_state: Vec<bool>) {
+        for (key_register, key_state) in self.keypad.iter_mut().zip(keypad_state.iter()) {
+            *key_register = *key_state;
+        }
     }
     pub fn emulate_cycle(&mut self) {
         let mut pc_should_increment = true;

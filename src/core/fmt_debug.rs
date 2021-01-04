@@ -36,15 +36,15 @@ impl std::fmt::Debug for Chip8 {
                 .collect::<Vec<usize>>()
         );
 
-        writeln!(f, "\tScreen:");
-        for chunk in self.gfx.chunks(64) {
-            let line: String = chunk
-                .iter()
-                .map(|b| if *b == 0 { ' ' } else { '▇' })
-                .collect();
+        // writeln!(f, "\tScreen:");
+        // for chunk in self.gfx.chunks(64) {
+        //     let line: String = chunk
+        //         .iter()
+        //         .map(|b| if *b == 0 { ' ' } else { '▇' })
+        //         .collect();
 
-            writeln!(f, "\t{:?}", line);
-        }
+        //     writeln!(f, "\t{:?}", line);
+        // }
 
         writeln!(f, "}}")
     }
