@@ -14,7 +14,7 @@ fn main() {
     let mut chip8 = Chip8::new();
 
     chip8.initialize();
-    chip8.load_game("roms/Cave.ch8");
+    chip8.load_game("roms/Tron.ch8");
 
     let mut i = 0;
     loop {
@@ -30,7 +30,9 @@ fn main() {
         // }
 
         // Store key press state (Press and Release)
-        // chip8.set_keys();
+        // chip8.set_keys(0x0f, true);  // Hold down 0xF key (temp) 
+
+        // Lock cycle loop to 60hz
         thread::sleep(Duration::from_millis(1000 / CLOCK_SPEED_HZ))
     }
 }

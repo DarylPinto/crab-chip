@@ -46,8 +46,8 @@ impl Chip8 {
             delay_timer: 0x00,
             sound_timer: 0x00,
             stack: [0x00; 16],
-            stack_pointer: 0x00,
-            keypad: [false; 16],
+            stack_pointer: 0x00, 
+            keypad: [true; 16], // TEMPORARILY SET ALL TO TRUE (ALL KEYS HELD)
             draw_flag: false,
         }
     }
@@ -83,7 +83,9 @@ impl Chip8 {
 
         Ok(())
     }
-    pub fn set_keys(&self) {}
+    pub fn set_keys(&mut self, key_index: u8, is_pressed: bool) {
+        self.keypad[key_index as usize] = is_pressed;
+    }
     pub fn emulate_cycle(&mut self) {
         let mut pc_should_increment = true;
 
@@ -158,7 +160,7 @@ impl Chip8 {
             }
             // 7XNN: Add NN to vX
             0x7000 => {
-                self.registers[x] += nn;
+                self.registers[x] = vx.wrapping_add(nn);
             }
             // 8 series opcodes
             0x8000 => {
@@ -175,9 +177,10 @@ impl Chip8 {
                         let u8_max = u8::MAX as u16;
 
                         let result = vx + vy;
+                        let wrapped_result = (vx as u8).wrapping_add(vy as u8);
                         let carried = result > u8_max;
-
-                        self.registers[x] += (result % u8_max) as u8;
+ 
+                        self.registers[x] = wrapped_result;
                         self.registers[0x0F] = match carried {
                             true => 0x01,
                             false => 0x00,
@@ -227,6 +230,10 @@ impl Chip8 {
                     0x15 => {
                         self.delay_timer = vx;
                     }
+                    // Fx18: Set sound timer to vX
+                    0x18 => {
+                        self.sound_timer = vx;
+                    }
                     // Fx29: Set I to the location of the sprite for the character in vX
                     // Fontset should already be loaded in memory at 0x50
                     0x29 => {
@@ -268,7 +275,7 @@ impl Chip8 {
 
         if self.sound_timer > 0 {
             if self.sound_timer == 1 {
-                println!("BEEP!");
+                println!("BEEP!"); 
             }
             self.sound_timer -= 1;
         }
