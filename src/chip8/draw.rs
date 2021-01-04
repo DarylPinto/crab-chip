@@ -43,6 +43,6 @@ pub fn dxyn(chip8: &mut Chip8, vx: u8, vy: u8, n: u8, I: usize) {
             }
         }
     }
-    
+
     chip8.draw_flag = true;
 }

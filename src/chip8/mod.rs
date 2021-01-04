@@ -46,8 +46,8 @@ impl Chip8 {
             delay_timer: 0x00,
             sound_timer: 0x00,
             stack: [0x00; 16],
-            stack_pointer: 0x00, 
-            keypad: [true; 16], // TEMPORARILY SET ALL TO TRUE (ALL KEYS HELD)
+            stack_pointer: 0x00,
+            keypad: [false; 16],
             draw_flag: false,
         }
     }
@@ -154,6 +154,12 @@ impl Chip8 {
                     self.program_counter += 2;
                 }
             }
+            // 5XY0: Skip next instruction if vX == vY
+            0x5000 => {
+                if vx == vy {
+                    self.program_counter += 2;
+                }
+            }
             // 6XNN: set VX to NN
             0x6000 => {
                 self.registers[x] = nn;
@@ -165,6 +171,10 @@ impl Chip8 {
             // 8 series opcodes
             0x8000 => {
                 match self.opcode & 0x000F {
+                    // 8XY0: set vX to value of vY
+                    0x00 => {
+                        self.registers[x] = vy;
+                    }
                     // 8XY2: set vX to (vX & vY)
                     0x02 => {
                         self.registers[x] = vx & vy;
@@ -179,9 +189,25 @@ impl Chip8 {
                         let result = vx + vy;
                         let wrapped_result = (vx as u8).wrapping_add(vy as u8);
                         let carried = result > u8_max;
- 
+
                         self.registers[x] = wrapped_result;
                         self.registers[0x0F] = match carried {
+                            true => 0x01,
+                            false => 0x00,
+                        };
+                    }
+                    // 8XY5: Subtract VY from VX. V[0xF] is set to 0 when there's a borrow, and to 1 when there isn't.
+                    0x05 => {
+                        let vx = vx as u16;
+                        let vy = vy as u16;
+
+                        let u8_max = u8::MAX as u16;
+
+                        let result = vx - vy;
+                        let wrapped_result = (vx as u8).wrapping_sub(vy as u8);
+
+                        self.registers[x] = wrapped_result;
+                        self.registers[0x0F] = match vx > vy {
                             true => 0x01,
                             false => 0x00,
                         };
@@ -189,14 +215,26 @@ impl Chip8 {
                     _ => panic!("Unknown CHIP-8 8-series opcode: {:#06x?}", self.opcode),
                 }
             }
+            // 9XY0: Skip next instruction if vX != vY
+            0x9000 => {
+                if vx != vy {
+                    self.program_counter += 2;
+                }
+            }
             // ANNN: set index_register to NNN
             0xA000 => {
                 self.index_register = nnn;
             }
+            // BNNN: Jump to NNN + v0
+            0xB000 => {
+                let v0 = self.registers[0] as u16;
+                self.program_counter = nnn + v0;
+                pc_should_increment = false;
+            }
             // CXNN: set vX to a random u8 & NN (bitwise &)
             0xC000 => {
-                let random: u8 = rand::thread_rng().gen(); 
-                self.registers[x] = random & nn; 
+                let random: u8 = rand::thread_rng().gen();
+                self.registers[x] = random & nn;
             }
             // DXYN: draw to the display
             0xD000 => draw::dxyn(self, vx, vy, n, I),
@@ -233,6 +271,10 @@ impl Chip8 {
                     // Fx18: Set sound timer to vX
                     0x18 => {
                         self.sound_timer = vx;
+                    }
+                    // Fx1E: Adds VX to I. VF is not affected
+                    0x1E => {
+                        self.index_register += vx as u16;
                     }
                     // Fx29: Set I to the location of the sprite for the character in vX
                     // Fontset should already be loaded in memory at 0x50
@@ -275,7 +317,7 @@ impl Chip8 {
 
         if self.sound_timer > 0 {
             if self.sound_timer == 1 {
-                println!("BEEP!"); 
+                println!("BEEP!");
             }
             self.sound_timer -= 1;
         }
