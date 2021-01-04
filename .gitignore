@@ -1,2 +1,4 @@
+.DS_Store
 /target
-/roms/*.rom
+/roms/*
+!/roms/.gitkeep

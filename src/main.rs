@@ -1,7 +1,7 @@
 mod chip8;
 use chip8::Chip8;
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 const CLOCK_SPEED_HZ: u64 = 60;
 
@@ -14,7 +14,7 @@ fn main() {
     let mut chip8 = Chip8::new();
 
     chip8.initialize();
-    chip8.load_game("roms/pong.rom");
+    chip8.load_game("roms/Cave.ch8");
 
     let mut i = 0;
     loop {

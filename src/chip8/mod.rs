@@ -1,9 +1,9 @@
 use rand::Rng;
 use std::fs::File;
 use std::io::{self, Read};
+mod draw;
 mod fmt_debug;
 mod fontset;
-mod draw;
 
 const FONTSET_START_ADDRESS: u16 = 0x50;
 const PC_START_ADDRESS: u16 = 0x200;
@@ -119,7 +119,7 @@ impl Chip8 {
                         let sp = self.stack_pointer as usize;
                         self.program_counter = self.stack[sp];
                     }
-                    _ => panic!("Unknown CHIP-8 0-series opcode: {:#06x?}", self.opcode)
+                    _ => panic!("Unknown CHIP-8 0-series opcode: {:#06x?}", self.opcode),
                 }
             }
             // 1NNN: Jump to NNN
@@ -147,7 +147,7 @@ impl Chip8 {
                 }
             }
             // 4XNN: Skip next instruction if vX != NN
-            0x4000 => { 
+            0x4000 => {
                 if vx != nn {
                     self.program_counter += 2;
                 }
@@ -192,8 +192,8 @@ impl Chip8 {
             }
             // CXNN: set vX to a random u8 & NN (bitwise &)
             0xC000 => {
-                let random: u8 = rand::thread_rng().gen();
-                self.registers[x] = random & nn;
+                let random: u8 = rand::thread_rng().gen(); 
+                self.registers[x] = random & nn; 
             }
             // DXYN: draw to the display
             0xD000 => draw::dxyn(self, vx, vy, n, I),
