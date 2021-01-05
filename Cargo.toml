@@ -1,5 +1,5 @@
 [package]
-name = "chip-8"
+name = "crab-chip"
 version = "0.1.0"
 authors = ["Daryl Pinto <daryl.j.pinto@gmail.com>"]
 edition = "2018"

@@ -59,11 +59,6 @@ impl Chip8 {
     pub fn initialize(&mut self) {
         self.program_counter = PC_START_ADDRESS;
 
-        // Clear display
-        // Clear stack
-        // Clear registers V0-VF
-        // Clear memory
-
         // Load fontset into memory
         let font = fontset::get();
         let addr = FONTSET_START_ADDRESS as usize;
@@ -72,8 +67,6 @@ impl Chip8 {
         for (mem_byte, font_byte) in mem_slice.iter_mut().zip(font.iter()) {
             *mem_byte = *font_byte;
         }
-
-        // Reset timers
     }
     pub fn load_game(&mut self, file_name: &str) {
         let file_path = format!("roms/{}", file_name);
@@ -373,7 +366,7 @@ impl Chip8 {
             self.program_counter += 2;
         }
 
-        // Because timers on chip8 only update 60/sec, but the clock speed in this
+        // Because timers on chip8 only update 60 times/sec, but the clock speed in this
         // emulator is configurable, we can determine exactly when the timers should
         // decrement with a bit of math
         self.timer_loop = (self.timer_loop + 1) % CYCLES_PER_TIMER_DECREMENT as u16;

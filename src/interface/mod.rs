@@ -18,7 +18,7 @@ pub fn render(rom_name: &str, mut chip8: Chip8) {
         ..WindowOptions::default()
     };
 
-    let window_title = format!("{} - Chip8", utils::trim_file_ext(rom_name));
+    let window_title = format!("{} - Crab Chip", utils::trim_file_ext(rom_name));
     let mut window =
         Window::new(&window_title, VIDEO_WIDTH, VIDEO_HEIGHT, opts).unwrap_or_else(|err| {
             panic!("{}", err);
