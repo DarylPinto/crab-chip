@@ -1,7 +1,6 @@
 use crate::Chip8;
-
-const VIDEO_WIDTH: u8 = 64;
-const VIDEO_HEIGHT: u8 = 32;
+use crate::VIDEO_HEIGHT;
+use crate::VIDEO_WIDTH;
 
 /**
  * Draws sprites to Chip8 display
@@ -10,8 +9,8 @@ pub fn dxyn(chip8: &mut Chip8, vx: u8, vy: u8, n: u8, I: usize) {
     let height = n;
 
     // Wrap if going beyond screen boundaries
-    let x_pos: usize = (vx % VIDEO_WIDTH).into();
-    let y_pos: usize = (vy % VIDEO_HEIGHT).into();
+    let x_pos = vx as usize % VIDEO_WIDTH;
+    let y_pos = vy as usize % VIDEO_HEIGHT;
 
     // Set VF to 0
     chip8.registers[0xF] = 0;
@@ -29,7 +28,7 @@ pub fn dxyn(chip8: &mut Chip8, vx: u8, vy: u8, n: u8, I: usize) {
             // Get the sprite pixel by looking at a specific bit of the sprite byte
             let sprite_pixel = sprite_byte & (0x80 >> col);
             // Get the screen pixel
-            let screen_pixel = &mut chip8.gfx[(y_pos + row) * VIDEO_WIDTH as usize + (x_pos + col)];
+            let screen_pixel = &mut chip8.gfx[(y_pos + row) * VIDEO_WIDTH + (x_pos + col)];
 
             // If sprite pixel is on
             if sprite_pixel > 0 {

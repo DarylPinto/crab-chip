@@ -1,9 +1,11 @@
 use rand::Rng;
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::Read;
 mod draw;
 mod fmt_debug;
 mod fontset;
+use crate::VIDEO_HEIGHT;
+use crate::VIDEO_WIDTH;
 
 const FONTSET_START_ADDRESS: u16 = 0x50;
 const PC_START_ADDRESS: u16 = 0x200;
@@ -20,7 +22,7 @@ pub struct Chip8 {
     program_counter: u16,
 
     // Screen graphics (64 x 32 px)
-    pub gfx: [u8; 64 * 32],
+    pub gfx: [u8; VIDEO_WIDTH * VIDEO_HEIGHT],
 
     delay_timer: u8,
     sound_timer: u8,
@@ -42,7 +44,7 @@ impl Chip8 {
             registers: [0x00; 16],
             index_register: 0x00,
             program_counter: 0x00,
-            gfx: [0x00; 64 * 32],
+            gfx: [0x00; VIDEO_WIDTH * VIDEO_HEIGHT],
             delay_timer: 0x00,
             sound_timer: 0x00,
             stack: [0x00; 16],
@@ -346,13 +348,13 @@ impl Chip8 {
                     }
                     // Fx55: Store v0 to vX (including vX) in memory starting at I
                     0x55 => {
-                        for offset in 0..x + 1 {
+                        for offset in 0..=x {
                             self.memory[I + offset] = self.registers[offset];
                         }
                     }
                     // Fx65: Fill v0 to vX (including vX) with mem values starting from I
                     0x65 => {
-                        for offset in 0..x + 1 {
+                        for offset in 0..=x {
                             self.registers[offset] = self.memory[I + offset];
                         }
                     }

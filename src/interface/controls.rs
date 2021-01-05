@@ -1,4 +1,4 @@
-use minifb::{Key};
+use minifb::Key;
 
 /**
  *  Controls are mapped as such on a standard
