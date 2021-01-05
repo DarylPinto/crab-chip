@@ -6,6 +6,7 @@ use crate::TARGET_FPS;
 use crate::VIDEO_HEIGHT;
 use crate::VIDEO_WIDTH;
 use minifb::{Key, Scale, Window, WindowOptions};
+use spin_sleep;
 use std::time::Duration;
 
 const CYCLES_PER_FRAME: u64 = CLOCK_SPEED_HZ / TARGET_FPS;
@@ -25,8 +26,11 @@ pub fn render(mut chip8: Chip8) {
     // Keyboard controls
     let keyboard_controls = controls::get_keyboard_layout();
 
-    // Limit to max fps
-    window.limit_update_rate(Some(Duration::from_millis(1000 / TARGET_FPS)));
+    // Unfortunately, due to cross platfrom differences, thread::sleep appears to
+    // be unreliable on Windows, cutting the FPS in half. Because of this we must call
+    // spin_sleep at the end of the loop body instead of using minifb's built-in
+    // window.limit_update_rate
+    window.limit_update_rate(None);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let held_keys: Vec<bool> = keyboard_controls
@@ -54,5 +58,8 @@ pub fn render(mut chip8: Chip8) {
         window
             .update_with_buffer(&framebuffer, VIDEO_WIDTH, VIDEO_HEIGHT)
             .unwrap();
+
+        // Limit to max fps
+        spin_sleep::sleep(Duration::from_millis(1000 / TARGET_FPS));
     }
 }
