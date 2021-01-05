@@ -4,36 +4,38 @@ use std::io::Read;
 mod draw;
 mod fmt_debug;
 mod fontset;
+use crate::CLOCK_SPEED_HZ;
 use crate::VIDEO_HEIGHT;
 use crate::VIDEO_WIDTH;
 
 const FONTSET_START_ADDRESS: u16 = 0x50;
 const PC_START_ADDRESS: u16 = 0x200;
 
+// Chip8 timers decrement at 60hz, even though the clock speed may be higher
+const CYCLES_PER_TIMER_DECREMENT: usize = CLOCK_SPEED_HZ as usize / 60;
+
 pub struct Chip8 {
-    /* === CPU ===*/
     opcode: u16,
     memory: [u8; 4096],
-
-    // registers v0, v1 ... vE
+    // Registers v0, v1 ... vF
     registers: [u8; 16],
-
     index_register: u16,
+    // PC
     program_counter: u16,
-
-    // Screen graphics (64 x 32 px)
+    // Video RAM
     pub gfx: [u8; VIDEO_WIDTH * VIDEO_HEIGHT],
-
+    // Timers
     delay_timer: u8,
     sound_timer: u8,
-
+    // Call stack
     stack: [u16; 16],
     stack_pointer: u8,
-
+    // Input
     keypad: [bool; 16],
 
-    /* === FLAGS === */
+    /* === Non-standard === */
     pub draw_flag: bool,
+    timer_loop: u16,
 }
 
 impl Chip8 {
@@ -51,6 +53,7 @@ impl Chip8 {
             stack_pointer: 0x00,
             keypad: [false; 16],
             draw_flag: false,
+            timer_loop: 0x0000,
         }
     }
     pub fn initialize(&mut self) {
@@ -369,16 +372,24 @@ impl Chip8 {
             self.program_counter += 2;
         }
 
-        // Update timers
-        if self.delay_timer > 0 {
-            self.delay_timer -= 1;
-        }
+        // Because timers on chip8 only update 60/sec, but the clock speed in this
+        // emulator is configurable, we can determine exactly when the timers should
+        // decrement with a bit of math
+        self.timer_loop = (self.timer_loop + 1) % CYCLES_PER_TIMER_DECREMENT as u16;
+        let should_timer_update = self.timer_loop == 0;
 
-        if self.sound_timer > 0 {
-            if self.sound_timer == 1 {
-                println!("BEEP!");
+        // Update timers
+        if should_timer_update {
+            if self.delay_timer > 0 {
+                self.delay_timer -= 1;
             }
-            self.sound_timer -= 1;
+
+            if self.sound_timer > 0 {
+                if self.sound_timer == 1 {
+                    println!("BEEP!");
+                }
+                self.sound_timer -= 1;
+            }
         }
     }
 }

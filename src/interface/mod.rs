@@ -1,5 +1,6 @@
 mod controls;
 use crate::core::Chip8;
+use crate::utils;
 use crate::CLOCK_SPEED_HZ;
 use crate::TARGET_FPS;
 use crate::VIDEO_HEIGHT;
@@ -24,7 +25,7 @@ pub fn render(mut chip8: Chip8) {
     // Keyboard controls
     let keyboard_controls = controls::get_keyboard_layout();
 
-    // Limit to max ~60 fps update rate
+    // Limit to max fps
     window.limit_update_rate(Some(Duration::from_millis(1000 / TARGET_FPS)));
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
@@ -37,6 +38,9 @@ pub fn render(mut chip8: Chip8) {
         for _ in 0..CYCLES_PER_FRAME {
             chip8.emulate_cycle();
         }
+
+        utils::clear_screen();
+        println!("{:?}", chip8);
 
         // Dump video ram data into frame buffer
         for (framebuffer_pixel, vram_pixel) in framebuffer.iter_mut().zip(chip8.gfx.iter()) {
