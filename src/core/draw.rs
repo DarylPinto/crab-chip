@@ -5,7 +5,7 @@ use crate::VIDEO_WIDTH;
 const SPRITE_WIDTH: u8 = 8;
 
 /**
- * Draws sprites to Chip8 display
+ * Draw sprites to Chip8 VRAM
  */
 pub fn dxyn(chip8: &mut Chip8, vx: u8, vy: u8, n: u8, I: usize) {
     let height = n;

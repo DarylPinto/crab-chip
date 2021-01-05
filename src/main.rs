@@ -8,6 +8,8 @@ const VIDEO_HEIGHT: usize = 32;
 const CLOCK_SPEED_HZ: u64 = 600;
 const TARGET_FPS: u64 = 60;
 
+const DEBUG: bool = false;
+
 fn main() {
     let settings = utils::parse_yaml_file("settings.yaml");
 

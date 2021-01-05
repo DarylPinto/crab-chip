@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
 
-pub fn clear_screen() {
+pub fn clear_terminal() {
     print!("\x1B[2J\x1B[1;1H");
 }
 
