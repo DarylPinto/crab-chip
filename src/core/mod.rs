@@ -76,7 +76,8 @@ impl Chip8 {
         // Reset timers
     }
     pub fn load_game(&mut self, file_name: &str) {
-        let f = match File::open(file_name) {
+        let file_path = format!("roms/{}", file_name);
+        let f = match File::open(file_path) {
             Err(msg) => panic!("couldn't open {}: {}", file_name, msg),
             Ok(file) => file,
         };
