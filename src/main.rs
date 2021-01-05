@@ -21,5 +21,5 @@ fn main() {
 
     chip8.load_game(rom_name);
 
-    interface::render(chip8);
+    interface::render(rom_name, chip8);
 }

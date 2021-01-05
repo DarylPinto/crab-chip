@@ -1,9 +1,17 @@
 use serde_yaml;
 use std::collections::HashMap;
 use std::fs::File;
+use std::path::Path;
 
 pub fn clear_screen() {
     print!("\x1B[2J\x1B[1;1H");
+}
+
+pub fn trim_file_ext(file_name: &str) -> String {
+    match Path::new(file_name).file_stem() {
+        Some(pretty_name) => String::from(pretty_name.to_str().unwrap()),
+        None => String::from(file_name),
+    }
 }
 
 pub fn parse_yaml_file(file_name: &str) -> HashMap<String, String> {
