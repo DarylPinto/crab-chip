@@ -1,9 +1,42 @@
-# Rust Chip 8 Emulator
-An attempt to emulate the Chip 8 VM with Rust
+# Crab Chip
+[CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator for Windows & MacOS written in Rust
 
-## Resources
-* Chip 8 emulator guides:
+![Preview](/assets/screenshot.png)
+> *Game: "8CE Attourny" by [SystemLogoff](https://systemlogoff.com/)*
+
+## How to Use
+1. Download the emulator from the releases tab
+2. Select the game you'd like to play by editing the `settings.yaml` file. All games are loaded from the `roms` folder
+3. Launch the emulator!
+
+## ROMS
+More ROMs are available to download from the [CHIP-8 ROM archive](https://github.com/JohnEarnest/chip8Archive/tree/master/roms)
+
+## Controls
+The CHIP-8 uses a hexadecimal keypad for input. These are mapped as such on a QWERTY keyboard:
+```
+CHIP-8               Computer
+Hex Keypad           Keyboard
+
++-+-+-+-+            +-+-+-+-+
+|1|2|3|C|            |1|2|3|4|
++-+-+-+-+            +-+-+-+-+
+|4|5|6|D|            |Q|W|E|R|
++-+-+-+-+     ->     +-+-+-+-+
+|7|8|9|E|            |A|S|D|F|
++-+-+-+-+            +-+-+-+-+
+|A|0|B|F|            |Z|X|C|V|
++-+-+-+-+            +-+-+-+-+
+```
+Each game uses it's own control scheme, so if you're unsure how a game works then play around with the keys to see what each one does.
+
+___
+
+### Disclaimer
+I'm not a Rust expert. There are almost certainly more idiomatic approaches to implementation, so keep that in mind while reading the code.
+
+### Development Resources
+* Technical reference: http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+* Implementation guides:
 	* http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
 	* https://austinmorlan.com/posts/chip8_emulator/
-* Technical reference: http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
-* Potential Graphics renderer: https://github.com/Rust-SDL2/rust-sdl2
