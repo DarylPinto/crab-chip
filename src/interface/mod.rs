@@ -51,6 +51,8 @@ pub fn render(rom_name: &str, mut chip8: Chip8) {
 
         for _ in 0..CYCLES_PER_FRAME {
             chip8.emulate_cycle();
+            // If any of the cpu cycles in this frame requested to draw,
+            // set the flag in the event loop
             if chip8.draw_flag {
                 should_draw = true
             }

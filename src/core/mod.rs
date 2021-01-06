@@ -89,6 +89,7 @@ impl Chip8 {
     }
     pub fn emulate_cycle(&mut self) {
         let mut pc_should_increment = true;
+        self.draw_flag = false;
 
         // Usize casted pointers for indexing system memory
         let pc = self.program_counter as usize;
