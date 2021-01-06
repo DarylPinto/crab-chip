@@ -2,31 +2,29 @@
 [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator for Windows & MacOS written in Rust
 
 ![Preview](/assets/screenshot.png)
-> *Game: "8CE Attourny" by [SystemLogoff](https://systemlogoff.com/)*
+> *Game: "Space Invaders" by David Winter*
 
-## How to Use
-1. Download the emulator from the [releases tab](https://github.com/DarylPinto/crab-chip/releases)
-2. Select the game you'd like to play by editing the `settings.yaml` file. All games are loaded from the `roms` folder
-3. Launch the emulator!
+## Download
+You can get the emulator from the [releases tab](https://github.com/DarylPinto/crab-chip/releases) for 64-bit Windows and Intel Mac devices.
 
-## ROMS
-More ROMs are available to download from the [CHIP-8 ROM archive](https://github.com/JohnEarnest/chip8Archive/tree/master/roms)
+## Games
+The release comes packaged with a few games. Many more are available to download from the [CHIP-8 ROM archive](https://github.com/JohnEarnest/chip8Archive/tree/master/roms) and elsewhere on the internet as freeware. Select the game you'd like to play by editing the `settings.yaml` file. All games are loaded from the `roms` folder.
 
 ## Controls
 The CHIP-8 uses a hexadecimal keypad for input. These are mapped as such on a QWERTY keyboard:
 ```
-CHIP-8               Computer
-Hex Keypad           Keyboard
+     CHIP-8                      Computer
+   Hex Keypad                    Keyboard
 
-+-+-+-+-+            +-+-+-+-+
-|1|2|3|C|            |1|2|3|4|
-+-+-+-+-+            +-+-+-+-+
-|4|5|6|D|            |Q|W|E|R|
-+-+-+-+-+     ->     +-+-+-+-+
-|7|8|9|E|            |A|S|D|F|
-+-+-+-+-+            +-+-+-+-+
-|A|0|B|F|            |Z|X|C|V|
-+-+-+-+-+            +-+-+-+-+
+.---.---.---.---.            .---.---.---.---.
+| 1 | 2 | 3 | C |            | 1 | 2 | 3 | 4 |
+.---.---.---.---.            .---.---.---.---.
+| 4 | 5 | 6 | D |            | Q | W | E | R |
+.---.---.---.---.     ->     .---.---.---.---.
+| 7 | 8 | 9 | E |            | A | S | D | F |
+.---.---.---.---.            .---.---.---.---.
+| A | 0 | B | F |            | Z | X | C | V |
+.---.---.---.---.            .---.---.---.---.
 ```
 Each game uses it's own control scheme, so if you're unsure how a game works then play around with the keys to see what each one does.
 
