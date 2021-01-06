@@ -5,7 +5,7 @@
 > *Game: "8CE Attourny" by [SystemLogoff](https://systemlogoff.com/)*
 
 ## How to Use
-1. Download the emulator from the releases tab
+1. Download the emulator from the [releases tab](https://github.com/DarylPinto/crab-chip/releases)
 2. Select the game you'd like to play by editing the `settings.yaml` file. All games are loaded from the `roms` folder
 3. Launch the emulator!
 
