@@ -27,8 +27,7 @@ impl std::fmt::Debug for Chip8 {
                 .keypad
                 .iter()
                 .enumerate()
-                .map(|(key, is_pressed)| if *is_pressed { key } else { 0xFF })
-                .filter(|key| *key as u8 != 0xFF)
+                .filter_map(|(key, is_pressed)| if *is_pressed { Some(key) } else { None })
                 .collect::<Vec<usize>>(),
         )
     }
