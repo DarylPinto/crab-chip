@@ -1,11 +1,11 @@
 mod draw;
+mod error;
 mod fmt_debug;
 mod fontset;
-mod error;
-use error::Error;
 use crate::CLOCK_SPEED_HZ;
 use crate::VIDEO_HEIGHT;
 use crate::VIDEO_WIDTH;
+use error::Error;
 use rand::Rng;
 use std::fs::File;
 use std::io;
