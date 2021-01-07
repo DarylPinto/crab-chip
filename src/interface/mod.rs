@@ -8,17 +8,26 @@ use crate::VIDEO_HEIGHT;
 use crate::VIDEO_WIDTH;
 use minifb::{Key, Scale, Window, WindowOptions};
 use spin_sleep;
+use std::path::Path;
 use std::time::Duration;
 
 const CYCLES_PER_FRAME: u64 = CLOCK_SPEED_HZ / TARGET_FPS;
 
-pub fn render(rom_name: &str, mut chip8: Chip8) {
+pub fn render<P: AsRef<Path>>(rom_name: &P, mut chip8: Chip8) {
     let opts = WindowOptions {
         scale: Scale::X16,
         ..WindowOptions::default()
     };
 
-    let window_title = format!("{} - Crab Chip", utils::trim_file_ext(rom_name));
+    let window_title = format!(
+        "{} - Crab Chip",
+        rom_name
+            .as_ref()
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("Unknown")
+    );
+
     let mut window =
         Window::new(&window_title, VIDEO_WIDTH, VIDEO_HEIGHT, opts).unwrap_or_else(|err| {
             panic!("{}", err);
