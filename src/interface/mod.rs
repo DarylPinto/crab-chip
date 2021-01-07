@@ -13,7 +13,10 @@ use std::time::Duration;
 
 const CYCLES_PER_FRAME: u64 = CLOCK_SPEED_HZ / TARGET_FPS;
 
-pub fn render<P: AsRef<Path>>(rom_name: &P, mut chip8: Chip8) {
+pub fn render<P: AsRef<Path>>(
+    rom_name: &P,
+    mut chip8: Chip8,
+) -> Result<(), Box<dyn std::error::Error>> {
     let opts = WindowOptions {
         scale: Scale::X16,
         ..WindowOptions::default()
@@ -28,10 +31,7 @@ pub fn render<P: AsRef<Path>>(rom_name: &P, mut chip8: Chip8) {
             .unwrap_or("Unknown")
     );
 
-    let mut window =
-        Window::new(&window_title, VIDEO_WIDTH, VIDEO_HEIGHT, opts).unwrap_or_else(|err| {
-            panic!("{}", err);
-        });
+    let mut window = Window::new(&window_title, VIDEO_WIDTH, VIDEO_HEIGHT, opts)?;
 
     let mut framebuffer: Vec<u32> = vec![0; VIDEO_WIDTH * VIDEO_HEIGHT];
 
@@ -90,4 +90,6 @@ pub fn render<P: AsRef<Path>>(rom_name: &P, mut chip8: Chip8) {
         // Limit to max fps
         spin_sleep::sleep(Duration::from_millis(1000 / TARGET_FPS));
     }
+
+    Ok(())
 }
