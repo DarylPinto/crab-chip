@@ -208,13 +208,10 @@ impl Chip8 {
 
                         let result = vx + vy;
                         let wrapped_result = (vx as u8).wrapping_add(vy as u8);
-                        let carried = result > u8_max;
 
                         self.registers[x] = wrapped_result;
-                        self.registers[0x0F] = match carried {
-                            true => 0x01,
-                            false => 0x00,
-                        };
+                        // Carry flag
+                        self.registers[0x0F] = (result > u8_max) as u8;
                         Ok(pc + 2)
                     }
                     // 8XY5: Subtract VY from VX. V[0xF] is set to 0 when there's a borrow, and to 1 when there isn't.
@@ -225,10 +222,7 @@ impl Chip8 {
                         let wrapped_result = (vx as u8).wrapping_sub(vy as u8);
 
                         self.registers[x] = wrapped_result;
-                        self.registers[0x0F] = match vx > vy {
-                            true => 0x01,
-                            false => 0x00,
-                        };
+                        self.registers[0x0F] = (vx > vy) as u8;
                         Ok(pc + 2)
                     }
                     // 8XY6: Store the least significant bit of VX in VF, then shift VX to the right by 1
@@ -247,10 +241,7 @@ impl Chip8 {
                         let wrapped_result = (vy as u8).wrapping_sub(vx as u8);
 
                         self.registers[x] = wrapped_result;
-                        self.registers[0x0F] = match vy > vx {
-                            true => 0x01,
-                            false => 0x00,
-                        };
+                        self.registers[0x0F] = (vy > vx) as u8;
                         Ok(pc + 2)
                     }
                     // 8XYE: Store the most significant bit of VX in VF, then shift VX to the left by 1
