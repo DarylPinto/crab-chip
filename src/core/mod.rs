@@ -1,12 +1,13 @@
-use rand::Rng;
-use std::fs::File;
-use std::io::Read;
 mod draw;
 mod fmt_debug;
 mod fontset;
 use crate::CLOCK_SPEED_HZ;
 use crate::VIDEO_HEIGHT;
 use crate::VIDEO_WIDTH;
+use rand::Rng;
+use std::fs::File;
+use std::io::Read;
+use std::io;
 
 const FONTSET_START_ADDRESS: u16 = 0x50;
 const PC_START_ADDRESS: u16 = 0x200;
@@ -68,12 +69,9 @@ impl Chip8 {
             *mem_byte = *font_byte;
         }
     }
-    pub fn load_game(&mut self, file_name: &str) {
+    pub fn load_game(&mut self, file_name: &str) -> Result<(), io::Error> {
         let file_path = format!("roms/{}", file_name);
-        let f = match File::open(file_path) {
-            Err(msg) => panic!("couldn't open {}: {}", file_name, msg),
-            Ok(file) => file,
-        };
+        let f = File::open(file_path)?;
 
         let pc = self.program_counter as usize;
         let mem_slice = &mut self.memory[pc..];
@@ -81,6 +79,8 @@ impl Chip8 {
         for (mem_byte, file_byte) in mem_slice.iter_mut().zip(f.bytes()) {
             *mem_byte = file_byte.unwrap();
         }
+
+        Ok(())
     }
     pub fn set_keys(&mut self, keypad_state: Vec<bool>) {
         for (key_register, key_state) in self.keypad.iter_mut().zip(keypad_state.iter()) {
