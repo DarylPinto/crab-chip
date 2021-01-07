@@ -2,3 +2,4 @@
 /target
 /roms/*
 !/roms/.gitkeep
+*.swp

@@ -59,7 +59,7 @@ pub fn render<P: AsRef<Path>>(
         let mut should_draw = false;
 
         for _ in 0..CYCLES_PER_FRAME {
-            chip8.emulate_cycle();
+            chip8.emulate_cycle()?;
             // If any of the cpu cycles in this frame requested to draw,
             // set the flag in the event loop
             if chip8.draw_flag {
@@ -82,10 +82,8 @@ pub fn render<P: AsRef<Path>>(
             }
         }
 
-        // We unwrap here as we want this code to exit if it fails. Real applications may want to handle this in a different way
-        window
-            .update_with_buffer(&framebuffer, VIDEO_WIDTH, VIDEO_HEIGHT)
-            .unwrap();
+        // Fail whole render if update fails. Real applications may want to handle this in a different way
+        window.update_with_buffer(&framebuffer, VIDEO_WIDTH, VIDEO_HEIGHT)?;
 
         // Limit to max fps
         spin_sleep::sleep(Duration::from_millis(1000 / TARGET_FPS));

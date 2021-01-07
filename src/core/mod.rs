@@ -1,13 +1,15 @@
 mod draw;
 mod fmt_debug;
 mod fontset;
+mod error;
+use error::Error;
 use crate::CLOCK_SPEED_HZ;
 use crate::VIDEO_HEIGHT;
 use crate::VIDEO_WIDTH;
 use rand::Rng;
 use std::fs::File;
-use std::io::Read;
 use std::io;
+use std::io::Read;
 
 const FONTSET_START_ADDRESS: u16 = 0x50;
 const PC_START_ADDRESS: u16 = 0x200;
@@ -77,7 +79,7 @@ impl Chip8 {
         let mem_slice = &mut self.memory[pc..];
 
         for (mem_byte, file_byte) in mem_slice.iter_mut().zip(f.bytes()) {
-            *mem_byte = file_byte.unwrap();
+            *mem_byte = file_byte?;
         }
 
         Ok(())
@@ -87,7 +89,7 @@ impl Chip8 {
             *key_register = *key_state;
         }
     }
-    pub fn emulate_cycle(&mut self) {
+    pub fn emulate_cycle(&mut self) -> Result<(), Error> {
         let mut pc_should_increment = true;
         self.draw_flag = false;
 
@@ -123,7 +125,7 @@ impl Chip8 {
                         let sp = self.stack_pointer as usize;
                         self.program_counter = self.stack[sp];
                     }
-                    _ => panic!("Unknown CHIP-8 0-series opcode: {:#06x?}", self.opcode),
+                    op => return Err(Error::UnknownOpcode(op)),
                 }
             }
             // 1NNN: Jump to NNN
@@ -248,7 +250,7 @@ impl Chip8 {
 
                         self.registers[x] = vx << 1;
                     }
-                    _ => panic!("Unknown CHIP-8 8-series opcode: {:#06x?}", self.opcode),
+                    op => return Err(Error::UnknownOpcode(op)),
                 }
             }
             // 9XY0: Skip next instruction if vX != vY
@@ -290,7 +292,7 @@ impl Chip8 {
                             self.program_counter += 2;
                         }
                     }
-                    _ => panic!("Unknown CHIP-8 E-series opcode: {:#06x?}", self.opcode),
+                    op => return Err(Error::UnknownOpcode(op)),
                 }
             }
             // F series opcodes
@@ -356,10 +358,10 @@ impl Chip8 {
                             self.registers[offset] = self.memory[I + offset];
                         }
                     }
-                    _ => panic!("Unknown CHIP-8 F-series opcode: {:#06x?}", self.opcode),
+                    op => return Err(Error::UnknownOpcode(op)),
                 }
             }
-            _ => panic!("Unknown CHIP-8 opcode: {:#06x?}", self.opcode),
+            op => return Err(Error::UnknownOpcode(op)),
         }
 
         // Move pc 2 bytes to next opcode (unless current opcode has prevented it)
@@ -386,5 +388,7 @@ impl Chip8 {
                 self.sound_timer -= 1;
             }
         }
+
+        Ok(())
     }
 }
