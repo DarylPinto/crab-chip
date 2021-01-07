@@ -43,18 +43,18 @@ pub struct Chip8 {
 impl Chip8 {
     pub fn new() -> Self {
         Chip8 {
-            memory: [0x00; 4096],
-            registers: [0x00; 16],
-            index_register: 0x00,
-            program_counter: 0x00,
-            gfx: [0x00; VIDEO_WIDTH * VIDEO_HEIGHT],
-            delay_timer: 0x00,
-            sound_timer: 0x00,
-            stack: [0x00; 16],
-            stack_pointer: 0x00,
+            memory: [0; 4096],
+            registers: [0; 16],
+            index_register: 0,
+            program_counter: 0,
+            gfx: [0; VIDEO_WIDTH * VIDEO_HEIGHT],
+            delay_timer: 0,
+            sound_timer: 0,
+            stack: [0; 16],
+            stack_pointer: 0,
             keypad: [false; 16],
             draw_flag: false,
-            timer_loop: 0x0000,
+            timer_loop: 0,
         }
     }
     pub fn initialize(&mut self) {
@@ -91,13 +91,12 @@ impl Chip8 {
         self.draw_flag = false;
 
         // Usize casted pointers for indexing system memory
-        let pc = self.program_counter as usize;
         let sp = self.stack_pointer as usize;
         let I = self.index_register as usize;
 
         // Fetch Opcode
-        let opcode = u16::from_be_bytes([self.memory[pc], self.memory[pc + 1]]);
-        let pc: u16 = self.program_counter;
+        let pc = self.program_counter;
+        let opcode = u16::from_be_bytes([self.memory[pc as usize], self.memory[pc as usize + 1]]);
 
         // These variables are derived from the opcode in many cases;
         // so much so that it makes sense to extract them here instead of
@@ -134,7 +133,7 @@ impl Chip8 {
             // 2NNN: Call NNN
             0x2000 => {
                 // Store pc in the stack and increment sp
-                self.stack[sp] = self.program_counter;
+                self.stack[sp] = pc;
                 self.stack_pointer += 1;
 
                 // Call NNN
@@ -183,22 +182,22 @@ impl Chip8 {
                     // 8XY0: set vX to value of vY
                     0x00 => {
                         self.registers[x] = vy;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // 8XY1: set vX to vx OR vY
                     0x01 => {
                         self.registers[x] = vx | vy;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // 8XY2: set vX to (vX & vY)
                     0x02 => {
                         self.registers[x] = vx & vy;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // 8XY3: set vX to vx XOR vY
                     0x03 => {
                         self.registers[x] = vx ^ vy;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // 8XY4: Adds VY to VX. V[0xF] is set to 1 when there's a carry, and to 0 when there isn't.
                     0x04 => {
@@ -216,7 +215,7 @@ impl Chip8 {
                             true => 0x01,
                             false => 0x00,
                         };
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // 8XY5: Subtract VY from VX. V[0xF] is set to 0 when there's a borrow, and to 1 when there isn't.
                     0x05 => {
@@ -230,7 +229,7 @@ impl Chip8 {
                             true => 0x01,
                             false => 0x00,
                         };
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // 8XY6: Store the least significant bit of VX in VF, then shift VX to the right by 1
                     0x06 => {
@@ -238,7 +237,7 @@ impl Chip8 {
                         self.registers[0x0F] = least_significant_bit;
 
                         self.registers[x] = vx >> 1;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // BXY7: Set VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
                     0x07 => {
@@ -252,7 +251,7 @@ impl Chip8 {
                             true => 0x01,
                             false => 0x00,
                         };
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // 8XYE: Store the most significant bit of VX in VF, then shift VX to the left by 1
                     0x0E => {
@@ -262,7 +261,7 @@ impl Chip8 {
                         self.registers[0x0F] = most_signficant_bit;
 
                         self.registers[x] = vx << 1;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     op => Err(Error::UnknownOpcode(op)),
                 }
@@ -270,15 +269,15 @@ impl Chip8 {
             // 9XY0: Skip next instruction if vX != vY
             0x9000 => {
                 if vx != vy {
-                    Ok(self.program_counter + 4)
+                    Ok(pc + 4)
                 } else {
-                    Ok(self.program_counter + 2)
+                    Ok(pc + 2)
                 }
             }
             // ANNN: set index_register to NNN
             0xA000 => {
                 self.index_register = nnn;
-                Ok(self.program_counter + 2)
+                Ok(pc + 2)
             }
             // BNNN: Jump to NNN + v0
             0xB000 => {
@@ -289,12 +288,12 @@ impl Chip8 {
             0xC000 => {
                 let random: u8 = rand::thread_rng().gen();
                 self.registers[x] = random & nn;
-                Ok(self.program_counter + 2)
+                Ok(pc + 2)
             }
             // DXYN: draw to the display
             0xD000 => {
                 draw::dxyn(self, vx, vy, n, I);
-                Ok(self.program_counter + 2)
+                Ok(pc + 2)
             }
             // E series opcodes
             0xE000 => {
@@ -303,17 +302,17 @@ impl Chip8 {
                     // EX9E: Skip next instruction if key in vX is pressed
                     0x9E => {
                         if self.keypad[vx] {
-                            Ok(self.program_counter + 4)
+                            Ok(pc + 4)
                         } else {
-                            Ok(self.program_counter + 2)
+                            Ok(pc + 2)
                         }
                     }
                     // EXA1: Skip next instruction if key in vX is NOT pressed
                     0xA1 => {
                         if !self.keypad[vx] {
-                            Ok(self.program_counter + 4)
+                            Ok(pc + 4)
                         } else {
-                            Ok(self.program_counter + 2)
+                            Ok(pc + 2)
                         }
                     }
                     op => return Err(Error::UnknownOpcode(op)),
@@ -325,7 +324,7 @@ impl Chip8 {
                     // Fx15: Set vX to value of delay timer
                     0x07 => {
                         self.registers[x] = self.delay_timer;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // Fx0A: wait for keypress, store in vX
                     0x0A => {
@@ -339,25 +338,25 @@ impl Chip8 {
                         }
 
                         if any_key_pressed {
-                            Ok(self.program_counter + 2)
+                            Ok(pc + 2)
                         } else {
-                            Ok(self.program_counter)
+                            Ok(pc)
                         }
                     }
                     // Fx15: Set delay timer to vX
                     0x15 => {
                         self.delay_timer = vx;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // Fx18: Set sound timer to vX
                     0x18 => {
                         self.sound_timer = vx;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // Fx1E: Adds VX to I. VF is not affected
                     0x1E => {
                         self.index_register += vx as u16;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // Fx29: Set I to the location of the sprite for the character in vX
                     // Fontset should already be loaded in memory at 0x50
@@ -365,7 +364,7 @@ impl Chip8 {
                         let vx = vx as u16;
                         let font_sprite_address = FONTSET_START_ADDRESS + (vx * 5);
                         self.index_register = font_sprite_address;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // Fx33 (hard to explain, check wikipedia)
                     0x33 => {
@@ -376,21 +375,21 @@ impl Chip8 {
                         self.memory[I] = hundreds;
                         self.memory[I + 1] = tens;
                         self.memory[I + 2] = ones;
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // Fx55: Store v0 to vX (including vX) in memory starting at I
                     0x55 => {
                         for offset in 0..=x {
                             self.memory[I + offset] = self.registers[offset];
                         }
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     // Fx65: Fill v0 to vX (including vX) with mem values starting from I
                     0x65 => {
                         for offset in 0..=x {
                             self.registers[offset] = self.memory[I + offset];
                         }
-                        Ok(self.program_counter + 2)
+                        Ok(pc + 2)
                     }
                     op => Err(Error::UnknownOpcode(op)),
                 }
@@ -402,10 +401,9 @@ impl Chip8 {
         // emulator is configurable, we can determine exactly when the timers should
         // decrement with a bit of math
         self.timer_loop = (self.timer_loop + 1) % CYCLES_PER_TIMER_DECREMENT as u16;
-        let should_timer_update = self.timer_loop == 0;
 
         // Update timers
-        if should_timer_update {
+        if self.timer_loop == 0 {
             if self.delay_timer > 0 {
                 self.delay_timer -= 1;
             }
