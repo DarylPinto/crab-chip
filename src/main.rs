@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     chip8.load_game(&settings.rom_name)?;
 
-    interface::render(&settings.rom_name, chip8);
+    interface::render(&settings.rom_name, chip8)?;
 
     Ok(())
 }
