@@ -4,7 +4,6 @@ impl std::fmt::Debug for Chip8 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Chip8 {{")?;
 
-        writeln!(f, "\tOp Code: {:#06x?}", self.opcode)?;
         writeln!(f, "\tV Registers: {:02x?}", self.registers)?;
 
         writeln!(f, "\tIndex Register: {:#06x?}", self.index_register)?;
