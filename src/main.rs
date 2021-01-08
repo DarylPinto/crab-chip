@@ -3,8 +3,6 @@ mod core;
 mod interface;
 mod utils;
 use crate::core::Chip8;
-use serde;
-use serde_yaml;
 use std::fs::File;
 
 const VIDEO_WIDTH: usize = 64;

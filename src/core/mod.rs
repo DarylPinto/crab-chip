@@ -206,12 +206,11 @@ impl Chip8 {
 
                         let u8_max = u8::MAX as u16;
 
-                        let result = vx + vy;
                         let wrapped_result = (vx as u8).wrapping_add(vy as u8);
 
                         self.registers[x] = wrapped_result;
                         // Carry flag
-                        self.registers[0x0F] = (result > u8_max) as u8;
+                        self.registers[0x0F] = ((vx + vy) > u8_max) as u8;
                         Ok(pc + 2)
                     }
                     // 8XY5: Subtract VY from VX. V[0xF] is set to 0 when there's a borrow, and to 1 when there isn't.
@@ -370,16 +369,12 @@ impl Chip8 {
                     }
                     // Fx55: Store v0 to vX (including vX) in memory starting at I
                     0x55 => {
-                        for offset in 0..=x {
-                            self.memory[I + offset] = self.registers[offset];
-                        }
+                        self.memory[I..=(x + I)].copy_from_slice(&self.registers[..=x]);
                         Ok(pc + 2)
                     }
                     // Fx65: Fill v0 to vX (including vX) with mem values starting from I
                     0x65 => {
-                        for offset in 0..=x {
-                            self.registers[offset] = self.memory[I + offset];
-                        }
+                        self.registers[..=x].copy_from_slice(&self.memory[I..=(x + I)]);
                         Ok(pc + 2)
                     }
                     op => Err(Error::UnknownOpcode(op)),
