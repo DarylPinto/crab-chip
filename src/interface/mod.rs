@@ -7,7 +7,6 @@ use crate::TARGET_FPS;
 use crate::VIDEO_HEIGHT;
 use crate::VIDEO_WIDTH;
 use minifb::{Key, Scale, Window, WindowOptions};
-use spin_sleep;
 use std::path::Path;
 use std::time::Duration;
 

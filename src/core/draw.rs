@@ -31,7 +31,8 @@ pub fn dxyn(chip8: &mut Chip8, vx: u8, vy: u8, n: u8, I: usize) {
             let sprite_pixel = sprite_byte & (0x80 >> col);
             // Get the screen pixel
             let mut screen_pixel_index = (vy + row) * VIDEO_WIDTH + (vx + col);
-            screen_pixel_index = screen_pixel_index % (VIDEO_WIDTH * VIDEO_HEIGHT); // prevent index out of bounds
+            // prevent index out of bounds
+            screen_pixel_index %= VIDEO_WIDTH * VIDEO_HEIGHT;
             let screen_pixel = &mut chip8.gfx[screen_pixel_index];
 
             // If sprite pixel is on
