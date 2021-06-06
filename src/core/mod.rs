@@ -38,6 +38,7 @@ pub struct Chip8 {
 
     /* === Non-standard === */
     pub draw_flag: bool,
+    pub sound_flag: bool,
     timer_loop: u16,
 }
 
@@ -56,6 +57,7 @@ impl Chip8 {
             stack_pointer: 0x00,
             keypad: [false; 16],
             draw_flag: false,
+            sound_flag: false,
             timer_loop: 0x0000,
         }
     }
@@ -92,6 +94,7 @@ impl Chip8 {
     pub fn emulate_cycle(&mut self) -> Result<(), Error> {
         let mut pc_should_increment = true;
         self.draw_flag = false;
+        self.sound_flag = false;
 
         // Usize casted pointers for indexing system memory
         let pc = self.program_counter as usize;
@@ -383,7 +386,7 @@ impl Chip8 {
 
             if self.sound_timer > 0 {
                 if self.sound_timer == 1 {
-                    println!("BEEP!");
+                    self.sound_flag = true;
                 }
                 self.sound_timer -= 1;
             }

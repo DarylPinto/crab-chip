@@ -1,6 +1,8 @@
 mod controls;
+mod sound;
 use crate::core::Chip8;
 use crate::utils;
+use crate::Config;
 use crate::CLOCK_SPEED_HZ;
 use crate::DEBUG;
 use crate::TARGET_FPS;
@@ -13,10 +15,7 @@ use std::time::Duration;
 
 const CYCLES_PER_FRAME: u64 = CLOCK_SPEED_HZ / TARGET_FPS;
 
-pub fn render<P: AsRef<Path>>(
-    rom_name: &P,
-    mut chip8: Chip8,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn render(mut chip8: Chip8, settings: &Config) -> Result<(), Box<dyn std::error::Error>> {
     let opts = WindowOptions {
         scale: Scale::X16,
         ..WindowOptions::default()
@@ -24,8 +23,7 @@ pub fn render<P: AsRef<Path>>(
 
     let window_title = format!(
         "{} - Crab Chip",
-        rom_name
-            .as_ref()
+        Path::new(&settings.rom_name)
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("Unknown")
@@ -53,6 +51,8 @@ pub fn render<P: AsRef<Path>>(
 
         chip8.set_keys(held_keys);
 
+        let mut should_play_sound = false;
+
         // Even though we already have a flag indicating whether to draw
         // within `chip8`, it's clock cycle is too fast for the event loop to pick up.
         // For this reason, we have an independant draw flag here for the event loop
@@ -64,6 +64,9 @@ pub fn render<P: AsRef<Path>>(
             // set the flag in the event loop
             if chip8.draw_flag {
                 should_draw = true
+            }
+            if chip8.sound_flag {
+                should_play_sound = true;
             }
         }
 
@@ -80,6 +83,12 @@ pub fn render<P: AsRef<Path>>(
                     _ => *framebuffer_pixel = 0x00_000000,
                 }
             }
+        }
+
+        if should_play_sound && settings.sound_enabled {
+            std::thread::spawn(|| {
+                sound::beep();
+            });
         }
 
         // Fail whole render if update fails. Real applications may want to handle this in a different way

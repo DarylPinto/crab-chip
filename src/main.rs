@@ -17,6 +17,7 @@ const DEBUG: bool = false;
 #[derive(serde::Deserialize, Debug)]
 pub struct Config {
     rom_name: String,
+    sound_enabled: bool,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -27,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     chip8.load_game(&settings.rom_name)?;
 
-    interface::render(&settings.rom_name, chip8)?;
+    interface::render(chip8, &settings)?;
 
     Ok(())
 }
